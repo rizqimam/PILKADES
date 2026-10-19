@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Simulasi Pilkades (Dengan Validasi & Grafik)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #34495e; color: #fff; font-weight: normal; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        input[type="number"], input[type="text"] { width: 90%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+        .note { font-size: 13px; color: #7f8c8d; text-align: center; margin-bottom: 20px; }
+        .btn-container { text-align: center; }
+        button { background-color: #27ae60; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        button:hover { background-color: #219150; }
+        #hasil { margin-top: 30px; padding: 20px; border-left: 5px solid #27ae60; background-color: #eafaf1; display: none; line-height: 1.6; }
+        .error-msg { background-color: #fadbd8; border-left: 5px solid #e74c3c; color: #c0392b; padding: 15px; margin-top: 20px; display: none; border-radius: 4px; }
+        .winner-highlight { font-size: 18px; font-weight: bold; color: #27ae60; }
+        .chart-container { position: relative; height: 400px; width: 100%; margin-top: 30px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Simulasi Perhitungan Pilkades</h1>
+    <p class="note">Berdasarkan 3 TPS dan 3 Kriteria Draw (Sebaran TPS, DPT Terbanyak, Partisipasi/Kehadiran Terbanyak)</p>
+
+    <div id="error-box" class="error-msg"></div>
+
+    <h3>1. Input Data TPS</h3>
+    <table>
+        <tr>
+            <th>Parameter</th>
+            <th>TPS 1</th>
+            <th>TPS 2</th>
+            <th>TPS 3</th>
+        </tr>
+        <tr>
+            <td>DPT (Jumlah Total)</td>
+            <td><input type="number" id="dpt1" value="1532" min="0"></td>
+            <td><input type="number" id="dpt2" value="1531" min="0"></td>
+            <td><input type="number" id="dpt3" value="1529" min="0"></td>
+        </tr>
+        <tr>
+            <td>Kehadiran (Partisipasi)</td>
+            <td><input type="number" id="hadir1" value="1337" min="0"></td>
+            <td><input type="number" id="hadir2" value="1372" min="0"></td>
+            <td><input type="number" id="hadir3" value="1313" min="0"></td>
+        </tr>
+        <tr>
+            <td>Suara Tidak Sah</td>
+            <td><input type="number" id="ts1" value="15" min="0"></td>
+            <td><input type="number" id="ts2" value="16" min="0"></td>
+            <td><input type="number" id="ts3" value="20" min="0"></td>
+        </tr>
+    </table>
+
+    <h3>2. Input Data Calon</h3>
+    <p class="note">Isi maksimal 5 calon. Apabila hanya 3 calon, calon 4 dan 5 wajib diisi NAMA dengan angka "0".</p>
+    <table>
+        <tr>
+            <th>No</th>
+            <th>Nama Calon</th>
+            <th>Suara Sah TPS 1</th>
+            <th>Suara Sah TPS 2</th>
+            <th>Suara Sah TPS 3</th>
+        </tr>
+        <script>
+            for(let i=1; i<=5; i++) {
+                let defaultName = "";
+                if(i === 1) defaultName = "RIZQI";
+                else if(i === 2) defaultName = "IMAM";
+                else if(i === 3) defaultName = "TAUHID";
+                else defaultName = "0";
+
+                let v1=0, v2=0, v3=0;
+                if(i===1){ v1=500; v2=375; v3=460; }
+                if(i===2){ v1=451; v2=491; v3=359; }
+                if(i===3){ v1=371; v2=490; v3=474; }
+
+                document.write(`
+                <tr>
+                    <td>${i}</td>
+                    <td><input type="text" id="nama${i}" value="${defaultName}"></td>
+                    <td><input type="number" id="c${i}_tps1" value="${v1}" min="0"></td>
+                    <td><input type="number" id="c${i}_tps2" value="${v2}" min="0"></td>
+                    <td><input type="number" id="c${i}_tps3" value="${v3}" min="0"></td>
+                </tr>
+                `);
+            }
+        </script>
+    </table>
+
+    <div class="btn-container">
+        <button onclick="hitungPemenang()">Hitung Pemenang</button>
+    </div>
+
+    <div id="hasil"></div>
+    <div class="chart-container" id="chartWrapper">
+        <canvas id="grafikHasil"></canvas>
+    </div>
+</div>
+
+<script>
+let chartInstance = null;
+
+function hitungPemenang() {
+    let errorBox = document.getElementById('error-box');
+    let divHasil = document.getElementById('hasil');
+    let chartWrapper = document.getElementById('chartWrapper');
+    
+    // Reset views
+    errorBox.style.display = 'none';
+    divHasil.style.display = 'none';
+    chartWrapper.style.display = 'none';
+
+    // 1. Ambil data TPS
+    let tps = [
+        { id: 1, dpt: parseInt(document.getElementById('dpt1').value)||0, hadir: parseInt(document.getElementById('hadir1').value)||0, ts: parseInt(document.getElementById('ts1').value)||0, sah: 0 },
+        { id: 2, dpt: parseInt(document.getElementById('dpt2').value)||0, hadir: parseInt(document.getElementById('hadir2').value)||0, ts: parseInt(document.getElementById('ts2').value)||0, sah: 0 },
+        { id: 3, dpt: parseInt(document.getElementById('dpt3').value)||0, hadir: parseInt(document.getElementById('hadir3').value)||0, ts: parseInt(document.getElementById('ts3').value)||0, sah: 0 }
+    ];
+
+    // 2. Ambil data Calon
+    let calon = [];
+    for(let i=1; i<=5; i++) {
+        let nama = document.getElementById('nama'+i).value.trim();
+        if(nama !== "0" && nama !== "") {
+            let tps1 = parseInt(document.getElementById('c'+i+'_tps1').value)||0;
+            let tps2 = parseInt(document.getElementById('c'+i+'_tps2').value)||0;
+            let tps3 = parseInt(document.getElementById('c'+i+'_tps3').value)||0;
+            let total = tps1 + tps2 + tps3;
+            
+            calon.push({ nama: nama, suara: [tps1, tps2, tps3], total: total, menang_tps: 0 });
+            
+            tps[0].sah += tps1;
+            tps[1].sah += tps2;
+            tps[2].sah += tps3;
+        }
+    }
+
+    // 3. Validasi Logika Data (Error Handling)
+    let isError = false;
+    let errorMsgs = [];
+    tps.forEach(t => {
+        let totalSuaraMasuk = t.sah + t.ts;
+        
+        // Cek 1: Kehadiran tidak boleh lebih dari DPT
+        if(t.hadir > t.dpt) {
+            isError = true;
+            errorMsgs.push(`<b>TPS ${t.id}:</b> Jumlah Kehadiran (${t.hadir}) melebihi jumlah DPT (${t.dpt}).`);
+        }
+        
+        // Cek 2: Kehadiran harus sinkron dengan (Total Suara Sah Semua Calon + Suara Tidak Sah)
+        if(t.hadir !== totalSuaraMasuk) {
+            isError = true;
+            errorMsgs.push(`<b>TPS ${t.id}:</b> Data tidak sinkron! Angka Kehadiran (${t.hadir}) tidak sama dengan total surat suara yang diinput (Suara Sah ${t.sah} + Tidak Sah ${t.ts} = ${totalSuaraMasuk}).`);
+        }
+    });
+
+    if(isError) {
+        errorBox.innerHTML = `<strong>Data Tidak Valid (Error):</strong><br>` + errorMsgs.join('<br>') + `<br><br><i>Silakan perbaiki data suara sah, kehadiran, atau suara tidak sah terlebih dahulu.</i>`;
+        errorBox.style.display = 'block';
+        return; // Hentikan kalkulasi jika ada error
+    }
+
+    // 4. Hitung sebaran kemenangan TPS (Kriteria 1)
+    for(let t=0; t<3; t++) {
+        let maxSuaraTps = -1;
+        let pemenangTps = [];
+        calon.forEach(c => {
+            if(c.suara[t] > maxSuaraTps) {
+                maxSuaraTps = c.suara[t];
+                pemenangTps = [c];
+            } else if(c.suara[t] === maxSuaraTps) {
+                pemenangTps.push(c);
+            }
+        });
+        if(pemenangTps.length === 1) {
+            pemenangTps[0].menang_tps += 1;
+        }
+    }
+
+    // 5. Eksekusi Logika Pemenang
+    let hasilHtml = "<h2>Hasil Pemilihan</h2>";
+    let maxTotal = Math.max(...calon.map(c => c.total));
+    let kandidat_draw = calon.filter(c => c.total === maxTotal);
+
+    if(kandidat_draw.length === 1) {
+        hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_draw[0].nama}</span><br><br><b>Keterangan:</b> Menang mutlak berdasarkan total suara terbanyak (${maxTotal} suara).`;
+    } else {
+        let drawNames = kandidat_draw.map(c => c.nama).join(' dan ');
+        hasilHtml += `Total suara tertinggi imbang (${maxTotal} suara) antara <b>${drawNames}</b>.<br><br>`;
+        
+        let maxMenangTps = Math.max(...kandidat_draw.map(c => c.menang_tps));
+        let kandidat_k1 = kandidat_draw.filter(c => c.menang_tps === maxMenangTps);
+        
+        if(kandidat_k1.length === 1) {
+            hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_k1[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 1</b>. Unggul di lebih banyak TPS (${maxMenangTps} TPS).`;
+        } else {
+            hasilHtml += `<i>Kriteria 1 Draw. Melanjutkan ke Kriteria 2...</i><br><br>`;
+            
+            let maxDpt = Math.max(...tps.map(t => t.dpt));
+            let tpsMaxDpt = tps.filter(t => t.dpt === maxDpt);
+            
+            if(tpsMaxDpt.length === 1) {
+                let tpsPenentuIdx = tpsMaxDpt[0].id - 1;
+                let maxSuaraDiTpsDpt = Math.max(...kandidat_k1.map(c => c.suara[tpsPenentuIdx]));
+                let kandidat_k2 = kandidat_k1.filter(c => c.suara[tpsPenentuIdx] === maxSuaraDiTpsDpt);
+                
+                if(kandidat_k2.length === 1) {
+                    hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_k2[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 2</b>. Suara terbanyak di TPS ${tpsPenentuIdx+1} (DPT tertinggi mutlak: ${maxDpt}).`;
+                } else {
+                    hasilHtml += lanjutKriteria3(tps, kandidat_k2);
+                }
+            } else {
+                hasilHtml += `<i>Terdapat ${tpsMaxDpt.length} TPS dengan DPT terbanyak yang sama (${maxDpt}). Melanjutkan ke Kriteria 3...</i><br><br>`;
+                hasilHtml += lanjutKriteria3(tps, kandidat_k1);
+            }
+        }
+    }
+
+    divHasil.innerHTML = hasilHtml;
+    divHasil.style.display = 'block';
+
+    // 6. Visualisasi Data (Render Chart)
+    renderChart(calon);
+}
+
+function lanjutKriteria3(tps, kandidat_list) {
+    let tpsMaxPartisipasi = tps.reduce((prev, current) => (prev.hadir > current.hadir) ? prev : current);
+    let tpsPenentuIdx = tpsMaxPartisipasi.id - 1;
+    let maxSuaraPartisipasi = Math.max(...kandidat_list.map(c => c.suara[tpsPenentuIdx]));
+    let kandidat_k3 = kandidat_list.filter(c => c.suara[tpsPenentuIdx] === maxSuaraPartisipasi);
+    
+    if(kandidat_k3.length === 1) {
+        return `<span class="winner-highlight">Pemenang: ${kandidat_k3[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 3</b>. Suara terbanyak di TPS ${tpsPenentuIdx+1} (Tingkat Kehadiran/Partisipasi tertinggi: ${tpsMaxPartisipasi.hadir}).`;
+    } else {
+        return `<span class="winner-highlight" style="color:#e74c3c;">Draw Total (Belum Dapat Ditentukan)</span>`;
+    }
+}
+
+function renderChart(calon) {
+    let chartWrapper = document.getElementById('chartWrapper');
+    let ctx = document.getElementById('grafikHasil').getContext('2d');
+    chartWrapper.style.display = 'block';
+
+    if (chartInstance) {
+        chartInstance.destroy(); // Hapus grafik lama jika ada
+    }
+
+    let labels = calon.map(c => c.nama);
+    let dataTps1 = calon.map(c => c.suara[0]);
+    let dataTps2 = calon.map(c => c.suara[1]);
+    let dataTps3 = calon.map(c => c.suara[2]);
+
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Suara TPS 1', data: dataTps1, backgroundColor: '#3498db' },
+                { label: 'Suara TPS 2', data: dataTps2, backgroundColor: '#e67e22' },
+                { label: 'Suara TPS 3', data: dataTps3, backgroundColor: '#9b59b6' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
+            plugins: {
+                title: { display: true, text: 'Perolehan Suara Calon per TPS', font: { size: 16 } }
+            }
+        }
+    });
+}
+</script>
+
+</body>
+</html>
