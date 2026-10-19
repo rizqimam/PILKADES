@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Simulasi Pilkades (Dengan Validasi & Grafik)</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https: cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
         .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -114,19 +114,19 @@ function hitungPemenang() {
     let divHasil = document.getElementById('hasil');
     let chartWrapper = document.getElementById('chartWrapper');
     
-    // Reset views
+      Reset views
     errorBox.style.display = 'none';
     divHasil.style.display = 'none';
     chartWrapper.style.display = 'none';
 
-    // 1. Ambil data TPS
+      1. Ambil data TPS
     let tps = [
         { id: 1, dpt: parseInt(document.getElementById('dpt1').value)||0, hadir: parseInt(document.getElementById('hadir1').value)||0, ts: parseInt(document.getElementById('ts1').value)||0, sah: 0 },
         { id: 2, dpt: parseInt(document.getElementById('dpt2').value)||0, hadir: parseInt(document.getElementById('hadir2').value)||0, ts: parseInt(document.getElementById('ts2').value)||0, sah: 0 },
         { id: 3, dpt: parseInt(document.getElementById('dpt3').value)||0, hadir: parseInt(document.getElementById('hadir3').value)||0, ts: parseInt(document.getElementById('ts3').value)||0, sah: 0 }
     ];
 
-    // 2. Ambil data Calon
+      2. Ambil data Calon
     let calon = [];
     for(let i=1; i<=5; i++) {
         let nama = document.getElementById('nama'+i).value.trim();
@@ -144,19 +144,19 @@ function hitungPemenang() {
         }
     }
 
-    // 3. Validasi Logika Data (Error Handling)
+      3. Validasi Logika Data (Error Handling)
     let isError = false;
     let errorMsgs = [];
     tps.forEach(t => {
         let totalSuaraMasuk = t.sah + t.ts;
         
-        // Cek 1: Kehadiran tidak boleh lebih dari DPT
+          Cek 1: Kehadiran tidak boleh lebih dari DPT
         if(t.hadir > t.dpt) {
             isError = true;
             errorMsgs.push(`<b>TPS ${t.id}:</b> Jumlah Kehadiran (${t.hadir}) melebihi jumlah DPT (${t.dpt}).`);
         }
         
-        // Cek 2: Kehadiran harus sinkron dengan (Total Suara Sah Semua Calon + Suara Tidak Sah)
+          Cek 2: Kehadiran harus sinkron dengan (Total Suara Sah Semua Calon + Suara Tidak Sah)
         if(t.hadir !== totalSuaraMasuk) {
             isError = true;
             errorMsgs.push(`<b>TPS ${t.id}:</b> Data tidak sinkron! Angka Kehadiran (${t.hadir}) tidak sama dengan total surat suara yang diinput (Suara Sah ${t.sah} + Tidak Sah ${t.ts} = ${totalSuaraMasuk}).`);
@@ -166,10 +166,10 @@ function hitungPemenang() {
     if(isError) {
         errorBox.innerHTML = `<strong>Data Tidak Valid (Error):</strong><br>` + errorMsgs.join('<br>') + `<br><br><i>Silakan perbaiki data suara sah, kehadiran, atau suara tidak sah terlebih dahulu.</i>`;
         errorBox.style.display = 'block';
-        return; // Hentikan kalkulasi jika ada error
+        return;   Hentikan kalkulasi jika ada error
     }
 
-    // 4. Hitung sebaran kemenangan TPS (Kriteria 1)
+      4. Hitung sebaran kemenangan TPS (Kriteria 1)
     for(let t=0; t<3; t++) {
         let maxSuaraTps = -1;
         let pemenangTps = [];
@@ -186,7 +186,7 @@ function hitungPemenang() {
         }
     }
 
-    // 5. Eksekusi Logika Pemenang
+      5. Eksekusi Logika Pemenang
     let hasilHtml = "<h2>Hasil Pemilihan</h2>";
     let maxTotal = Math.max(...calon.map(c => c.total));
     let kandidat_draw = calon.filter(c => c.total === maxTotal);
@@ -228,7 +228,7 @@ function hitungPemenang() {
     divHasil.innerHTML = hasilHtml;
     divHasil.style.display = 'block';
 
-    // 6. Visualisasi Data (Render Chart)
+      6. Visualisasi Data (Render Chart)
     renderChart(calon);
 }
 
@@ -251,7 +251,7 @@ function renderChart(calon) {
     chartWrapper.style.display = 'block';
 
     if (chartInstance) {
-        chartInstance.destroy(); // Hapus grafik lama jika ada
+        chartInstance.destroy();   Hapus grafik lama jika ada
     }
 
     let labels = calon.map(c => c.nama);
