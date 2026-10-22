@@ -104,20 +104,31 @@
     <div class="chart-container" id="chartWrapper">
         <canvas id="grafikHasil"></canvas>
     </div>
+
+    <div id="partisipasiSection" style="display:none; margin-top:32px;">
+        <h2>Partisipasi Pemilih</h2>
+        <div class="chart-container" id="chartPartisipasiWrapper" style="display:block;">
+            <canvas id="grafikPartisipasi"></canvas>
+        </div>
+        <div id="tabelPartisipasi"></div>
+    </div>
 </div>
 
 <script>
 let chartInstance = null;
+let chartPartisipasiInstance = null;
 
 function hitungPemenang() {
     let errorBox = document.getElementById('error-box');
     let divHasil = document.getElementById('hasil');
     let chartWrapper = document.getElementById('chartWrapper');
+    let partisipasiSection = document.getElementById('partisipasiSection');
     
     // Reset views
     errorBox.style.display = 'none';
     divHasil.style.display = 'none';
     chartWrapper.style.display = 'none';
+    partisipasiSection.style.display = 'none';
 
     // 1. Ambil data TPS
     let tps = [
@@ -202,7 +213,7 @@ function hitungPemenang() {
             ${urutanTotal.map((c, idx) => `<tr>
                 <td>${idx + 1}</td><td>${c.nama}</td><td>${c.suara[0]}</td><td>${c.suara[1]}</td><td>${c.suara[2]}</td><td><b>${c.total}</b></td>
             </tr>`).join('')}
-        </table><hr>`;
+        </table>`;
 
     let maxTotal = Math.max(...calon.map(c => c.total));
     let kandidat_draw = calon.filter(c => c.total === maxTotal);
@@ -246,8 +257,9 @@ function hitungPemenang() {
     divHasil.innerHTML = hasilHtml;
     divHasil.style.display = 'block';
 
-    // 6. Visualisasi Data (Render Chart)
+    // 6. Visualisasi perolehan suara, lalu tampilkan partisipasi di bawahnya.
     renderChart(calon);
+    renderPartisipasi(tps);
 }
 
 function lanjutKriteria3(tps, kandidat_list) {
@@ -297,6 +309,63 @@ function renderChart(calon) {
         }
     });
 }
+
+function renderPartisipasi(tps) {
+    const section = document.getElementById('partisipasiSection');
+    const tabel = document.getElementById('tabelPartisipasi');
+    const ctx = document.getElementById('grafikPartisipasi').getContext('2d');
+    section.style.display = 'block';
+
+    const labels = tps.map(t => `TPS ${t.id}`);
+    const percentages = tps.map(t => t.dpt > 0 ? ((t.sah + t.ts) / t.dpt) * 100 : 0);
+    const totalDpt = tps.reduce((sum, t) => sum + t.dpt, 0);
+    const totalSah = tps.reduce((sum, t) => sum + t.sah, 0);
+    const totalTidakSah = tps.reduce((sum, t) => sum + t.ts, 0);
+    const totalPemilih = totalSah + totalTidakSah;
+    const persenTotal = totalDpt > 0 ? (totalPemilih / totalDpt) * 100 : 0;
+
+    tabel.innerHTML = `
+        <h3>Rincian Persentase Partisipasi Pemilih</h3>
+        <p class="note">Rumus: (Suara Sah + Suara Tidak Sah) ÷ DPT × 100%</p>
+        <table>
+            <tr><th>Lokasi</th><th>DPT</th><th>Suara Sah</th><th>Suara Tidak Sah</th><th>Total Pemilih</th><th>Partisipasi</th></tr>
+            ${tps.map((t, i) => {
+                const total = t.sah + t.ts;
+                return `<tr><td>TPS ${t.id}</td><td>${t.dpt}</td><td>${t.sah}</td><td>${t.ts}</td><td>${total}</td><td><b>${percentages[i].toFixed(2)}%</b></td></tr>`;
+            }).join('')}
+            <tr><td><b>Total</b></td><td><b>${totalDpt}</b></td><td><b>${totalSah}</b></td><td><b>${totalTidakSah}</b></td><td><b>${totalPemilih}</b></td><td><b>${persenTotal.toFixed(2)}%</b></td></tr>
+        </table>`;
+
+    if (chartPartisipasiInstance) chartPartisipasiInstance.destroy();
+    chartPartisipasiInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Partisipasi Pemilih (%)',
+                data: percentages,
+                backgroundColor: '#27ae60'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: { display: true, text: 'Partisipasi (%)' },
+                    ticks: { callback: value => value + '%' }
+                }
+            },
+            plugins: {
+                title: { display: true, text: 'Persentase Partisipasi Pemilih per TPS', font: { size: 16 } },
+                tooltip: { callbacks: { label: context => context.parsed.y.toFixed(2) + '%' } }
+            }
+        }
+    });
+}
+
 </script>
 
 </body>
