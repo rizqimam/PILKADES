@@ -186,40 +186,58 @@ function hitungPemenang() {
         }
     }
 
-    // 5. Eksekusi Logika Pemenang
+    // 5. Hitung dan tampilkan total suara terlebih dahulu.
+    // Kriteria draw hanya dijalankan jika total suara tertinggi benar-benar imbang.
     let hasilHtml = "<h2>Hasil Pemilihan</h2>";
+    if (calon.length === 0) {
+        errorBox.innerHTML = "Tidak ada calon yang dapat dihitung. Masukkan nama minimal satu calon selain angka 0.";
+        errorBox.style.display = 'block';
+        return;
+    }
+
+    let urutanTotal = [...calon].sort((a, b) => b.total - a.total);
+    hasilHtml += `<h3>Rekapitulasi Total Suara</h3>
+        <table>
+            <tr><th>Peringkat</th><th>Nama Calon</th><th>TPS 1</th><th>TPS 2</th><th>TPS 3</th><th>Total Suara</th></tr>
+            ${urutanTotal.map((c, idx) => `<tr>
+                <td>${idx + 1}</td><td>${c.nama}</td><td>${c.suara[0]}</td><td>${c.suara[1]}</td><td>${c.suara[2]}</td><td><b>${c.total}</b></td>
+            </tr>`).join('')}
+        </table><hr>`;
+
     let maxTotal = Math.max(...calon.map(c => c.total));
     let kandidat_draw = calon.filter(c => c.total === maxTotal);
 
+    // Jika total tertinggi hanya dimiliki satu calon, langsung tetapkan pemenang.
     if(kandidat_draw.length === 1) {
-        hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_draw[0].nama}</span><br><br><b>Keterangan:</b> Menang mutlak berdasarkan total suara terbanyak (${maxTotal} suara).`;
+        hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_draw[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan total suara terbanyak (${maxTotal} suara). Kriteria draw tidak diperlukan.`;
     } else {
+        // Hanya pada kondisi total tertinggi imbang, lanjutkan ke kriteria draw.
         let drawNames = kandidat_draw.map(c => c.nama).join(' dan ');
-        hasilHtml += `Total suara tertinggi imbang (${maxTotal} suara) antara <b>${drawNames}</b>.<br><br>`;
-        
+        hasilHtml += `<h3>Penentuan Pemenang saat Draw</h3>Total suara tertinggi imbang (${maxTotal} suara) antara <b>${drawNames}</b>.<br><br>`;
+
         let maxMenangTps = Math.max(...kandidat_draw.map(c => c.menang_tps));
         let kandidat_k1 = kandidat_draw.filter(c => c.menang_tps === maxMenangTps);
-        
+
         if(kandidat_k1.length === 1) {
-            hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_k1[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 1</b>. Unggul di lebih banyak TPS (${maxMenangTps} TPS).`;
+            hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_k1[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 1</b> (sebaran kemenangan TPS), unggul di ${maxMenangTps} TPS.`;
         } else {
-            hasilHtml += `<i>Kriteria 1 Draw. Melanjutkan ke Kriteria 2...</i><br><br>`;
-            
+            hasilHtml += `<i>Kriteria 1 masih imbang. Melanjutkan ke Kriteria 2...</i><br><br>`;
+
             let maxDpt = Math.max(...tps.map(t => t.dpt));
             let tpsMaxDpt = tps.filter(t => t.dpt === maxDpt);
-            
+
             if(tpsMaxDpt.length === 1) {
                 let tpsPenentuIdx = tpsMaxDpt[0].id - 1;
                 let maxSuaraDiTpsDpt = Math.max(...kandidat_k1.map(c => c.suara[tpsPenentuIdx]));
                 let kandidat_k2 = kandidat_k1.filter(c => c.suara[tpsPenentuIdx] === maxSuaraDiTpsDpt);
-                
+
                 if(kandidat_k2.length === 1) {
-                    hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_k2[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 2</b>. Suara terbanyak di TPS ${tpsPenentuIdx+1} (DPT tertinggi mutlak: ${maxDpt}).`;
+                    hasilHtml += `<span class="winner-highlight">Pemenang: ${kandidat_k2[0].nama}</span><br><br><b>Keterangan:</b> Menang berdasarkan <b>Kriteria 2</b>, suara terbanyak di TPS ${tpsPenentuIdx + 1} (DPT tertinggi: ${maxDpt}).`;
                 } else {
                     hasilHtml += lanjutKriteria3(tps, kandidat_k2);
                 }
             } else {
-                hasilHtml += `<i>Terdapat ${tpsMaxDpt.length} TPS dengan DPT terbanyak yang sama (${maxDpt}). Melanjutkan ke Kriteria 3...</i><br><br>`;
+                hasilHtml += `<i>Ada ${tpsMaxDpt.length} TPS dengan DPT tertinggi yang sama (${maxDpt}). Melanjutkan ke Kriteria 3...</i><br><br>`;
                 hasilHtml += lanjutKriteria3(tps, kandidat_k1);
             }
         }
