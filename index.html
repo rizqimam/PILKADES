@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Simulasi Pilkades (Sesuai Perbup Pasal 52–53)</title>
+    <title>Aplikasi Simulasi Pilkades (Sesuai Pasal 52–53)</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; padding-bottom: 70px; background-color: #f4f7f6; color: #333; }
         .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1, h2, h3 { color: #2c3e50; text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
@@ -15,59 +15,83 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         input[type="number"], input[type="text"] { width: 90%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
         .note { font-size: 13px; color: #7f8c8d; text-align: center; margin-bottom: 20px; }
-        .btn-container { text-align: center; }
-        button { background-color: #27ae60; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        .btn-container { text-align: center; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+        button { background-color: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 15px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
         button:hover { background-color: #219150; }
+        button.secondary { background-color: #3498db; } button.secondary:hover { background-color: #2980b9; }
+        button.warning { background-color: #e67e22; } button.warning:hover { background-color: #ca6f1e; }
+        button.danger { background-color: #e74c3c; } button.danger:hover { background-color: #c0392b; }
+        button.gray { background-color: #7f8c8d; } button.gray:hover { background-color: #626f70; }
+
         #hasil { margin-top: 30px; padding: 20px; border-left: 5px solid #27ae60; background-color: #eafaf1; display: none; line-height: 1.6; }
         .error-msg { background-color: #fadbd8; border-left: 5px solid #e74c3c; color: #c0392b; padding: 15px; margin-top: 20px; display: none; border-radius: 4px; }
         .winner-highlight { font-size: 18px; font-weight: bold; color: #27ae60; }
         .log-box { background:#f8f9fa; border:1px dashed #95a5a6; padding:12px; border-radius:4px; font-size:14px; margin:12px 0; }
         .log-box ul { margin:6px 0 0 18px; padding:0; }
 
-        /* === HIGHLIGHT DRAW === */
+        .winner-banner { background: linear-gradient(135deg,#27ae60,#1e8449); color:#fff; padding:20px; border-radius:8px; text-align:center; margin-bottom:18px; box-shadow:0 4px 10px rgba(39,174,96,0.3); }
+        .winner-banner .trophy { font-size:28px; }
+        .winner-banner .name { font-size:26px; font-weight:bold; margin:6px 0; letter-spacing:1px; }
+        .winner-banner .reason { font-size:14px; opacity:0.95; }
+        .winner-banner.draw-total { background: linear-gradient(135deg,#e74c3c,#c0392b); box-shadow:0 4px 10px rgba(231,76,60,0.3); }
+
         tr.draw-row { background-color: #fff3cd !important; }
         tr.draw-row td { font-weight: bold; color: #856404; }
-        .draw-badge {
-            display: inline-block;
-            background: #ffc107;
-            color: #333;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-        .legend-draw {
-            font-size: 13px;
-            color: #856404;
-            background: #fff3cd;
-            border: 1px solid #ffe08a;
-            padding: 6px 10px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-bottom: 10px;
-        }
+        .draw-badge { display:inline-block; background:#ffc107; color:#333; font-size:11px; font-weight:bold; padding:2px 6px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+        .legend-draw { font-size:13px; color:#856404; background:#fff3cd; border:1px solid #ffe08a; padding:6px 10px; border-radius:4px; display:inline-block; margin-bottom:10px; }
+
+        td.score-win { background-color: #d4edda !important; color: #155724 !important; font-weight: bold; border: 2px solid #27ae60 !important; }
+        td.score-draw { background-color: #fff3cd !important; color: #856404 !important; font-weight: bold; border: 2px dashed #e0a800 !important; }
+        .legend-highlight { font-size: 12px; margin: 4px 0 10px 0; color: #555; }
+        .legend-highlight span.box { display:inline-block; width:12px; height:12px; border-radius:3px; margin:0 4px 0 10px; vertical-align:middle; }
+
+        .tps-summary th { background-color: #2c3e50; }
+        .tps-summary td.tps-penentu-win { background:#d4edda !important; color:#155724 !important; font-weight:bold; border:2px solid #27ae60 !important; }
+        .tps-summary td.tps-penentu-draw { background:#fff3cd !important; color:#856404 !important; font-weight:bold; border:2px dashed #e0a800 !important; }
+        .info-penentu { font-size:13px; color:#555; background:#eef6ff; border-left:4px solid #3498db; padding:8px 12px; margin:6px 0 12px 0; border-radius:4px; }
 
         .chart-container { position: relative; height: 400px; width: 100%; margin-top: 30px; display: none; }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: #fff;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+            padding: 12px 16px;
+            border-top: 1px solid #e1e6e4;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+        }
+        footer .heart { color: #e74c3c; animation: beat 1s infinite; display:inline-block; }
+        @keyframes beat { 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
+        footer .brand { font-weight: bold; color: #2c3e50; }
+
+        @media print {
+            body { background:#fff; padding:0; padding-bottom:0 !important; }
+            .container { box-shadow:none; padding:10px; max-width:100%; }
+            .btn-container, footer, .no-print { display:none !important; }
+            #hasil { display:block !important; }
+            .chart-container { display:block !important; height:300px !important; page-break-inside: avoid; }
+            table { font-size:12px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Simulasi Perhitungan Pilkades</h1>
-    <p class="note">Sesuai Perbup Pasal 52–53: Suara terbanyak → Wilayah suara sah lebih luas (TPS terbanyak → DPT terbanyak → Partisipasi terbanyak)</p>
+    <p class="note">Sesuai Pasal 52–53: Suara terbanyak → Wilayah suara sah lebih luas<br>
+        (huruf a: jumlah TPS terbanyak → huruf b: TPS DPT tertinggi → huruf c: TPS dengan <b>jumlah</b> pemilih hadir terbanyak)</p>
 
     <div id="error-box" class="error-msg"></div>
 
     <h3>1. Input Data TPS</h3>
     <table>
-        <tr>
-            <th>Parameter</th>
-            <th>TPS 1</th>
-            <th>TPS 2</th>
-            <th>TPS 3</th>
-        </tr>
+        <tr><th>Parameter</th><th>TPS 1</th><th>TPS 2</th><th>TPS 3</th></tr>
         <tr>
             <td>DPT (Jumlah Total)</td>
             <td><input type="number" id="dpt1" value="1532" min="0"></td>
@@ -91,26 +115,18 @@
     <h3>2. Input Data Calon</h3>
     <p class="note">Isi maksimal 5 calon. Apabila hanya 3 calon, calon 4 dan 5 wajib diisi NAMA dengan angka "0".</p>
     <table>
-        <tr>
-            <th>No</th>
-            <th>Nama Calon</th>
-            <th>Suara Sah TPS 1</th>
-            <th>Suara Sah TPS 2</th>
-            <th>Suara Sah TPS 3</th>
-        </tr>
+        <tr><th>No</th><th>Nama Calon</th><th>Suara Sah TPS 1</th><th>Suara Sah TPS 2</th><th>Suara Sah TPS 3</th></tr>
         <script>
             for(let i=1; i<=5; i++) {
                 let defaultName = "";
-                if(i === 1) defaultName = "RIZQI";
-                else if(i === 2) defaultName = "IMAM";
-                else if(i === 3) defaultName = "TAUHID";
+                if(i === 1) defaultName = "CALON A";
+                else if(i === 2) defaultName = "CALON B";
+                else if(i === 3) defaultName = "CALON C";
                 else defaultName = "0";
-
                 let v1=0, v2=0, v3=0;
                 if(i===1){ v1=500; v2=375; v3=460; }
                 if(i===2){ v1=451; v2=491; v3=359; }
                 if(i===3){ v1=371; v2=490; v3=474; }
-
                 document.write(`
                 <tr>
                     <td>${i}</td>
@@ -118,20 +134,23 @@
                     <td><input type="number" id="c${i}_tps1" value="${v1}" min="0"></td>
                     <td><input type="number" id="c${i}_tps2" value="${v2}" min="0"></td>
                     <td><input type="number" id="c${i}_tps3" value="${v3}" min="0"></td>
-                </tr>
-                `);
+                </tr>`);
             }
         </script>
     </table>
 
-    <div class="btn-container">
+    <div class="btn-container no-print">
         <button onclick="hitungPemenang()">Hitung Pemenang</button>
+        <button class="secondary" onclick="simpanData()">💾 Simpan</button>
+        <button class="secondary" onclick="muatData()">📂 Muat</button>
+        <button class="warning" onclick="muatContoh()">🎲 Muat Contoh</button>
+        <button class="gray" onclick="eksporCSV()">⬇️ Ekspor CSV</button>
+        <button class="gray" onclick="window.print()">🖨️ Cetak</button>
+        <button class="danger" onclick="resetData()">🔄 Reset</button>
     </div>
 
     <div id="hasil"></div>
-    <div class="chart-container" id="chartWrapper">
-        <canvas id="grafikHasil"></canvas>
-    </div>
+    <div class="chart-container" id="chartWrapper"><canvas id="grafikHasil"></canvas></div>
 
     <div id="partisipasiSection" style="display:none; margin-top:32px;">
         <h2>Partisipasi Pemilih</h2>
@@ -142,10 +161,131 @@
     </div>
 </div>
 
+<footer>
+    Made with <span class="heart">❤️</span> by <span class="brand">Mas Rizq Tech</span>
+</footer>
+
 <script>
 let chartInstance = null;
 let chartPartisipasiInstance = null;
+let lastResult = null;
 
+const STORAGE_KEY = 'pilkades_simulasi_data_v1';
+
+const DEFAULT_DATA = {
+    tps: [
+        { dpt: 1532, hadir: 1337, ts: 15 },
+        { dpt: 1531, hadir: 1372, ts: 16 },
+        { dpt: 1529, hadir: 1313, ts: 20 }
+    ],
+    calon: [
+        { nama: 'CALON A',  suara: [500, 375, 460] },
+        { nama: 'CALON B',   suara: [451, 491, 359] },
+        { nama: 'CALON C', suara: [371, 490, 474] },
+        { nama: '0', suara: [0,0,0] },
+        { nama: '0', suara: [0,0,0] }
+    ]
+};
+
+/*
+  Semua contoh valid: hadir = sah + ts di tiap TPS.
+  1. menangMutlak -> satu calon total tertinggi (Pasal 52 ayat 1)
+  2. drawA        -> total imbang, ada calon menang di >1 TPS (Pasal 53 huruf a)
+  3. drawB        -> total imbang, tidak ada >1 TPS, perbandingan TPS dengan DPT tertinggi menentukan (huruf b)
+  4. drawC        -> total imbang, (a) & (b) seri, jumlah pemilih hadir tertinggi menentukan (huruf c)
+  5. drawMutlak   -> total imbang, (a) (b) (c) semua seri -> tidak ada pemenang
+*/
+const CONTOH = {
+    menangMutlak: {
+        tps: [
+            { dpt: 1200, hadir: 900, ts: 10 },
+            { dpt: 1000, hadir: 700, ts: 10 },
+            { dpt: 1000, hadir: 700, ts: 10 }
+        ],
+        calon: [
+            { nama: 'CALON A', suara: [500, 200, 200] }, // 900
+            { nama: 'CALON B', suara: [300, 400, 150] }, // 850
+            { nama: 'CALON C', suara: [90,  90,  340] }, // 520
+            { nama: '0', suara: [0,0,0] },
+            { nama: '0', suara: [0,0,0] }
+        ]
+    },
+
+    drawA: {
+        // A=890, B=890. A menang TPS1 (450) & TPS2 (300) -> >1 TPS -> (a)
+        tps: [
+            { dpt: 1000, hadir: 900, ts: 10 }, // sah 890
+            { dpt: 1000, hadir: 700, ts: 10 }, // sah 690
+            { dpt: 1000, hadir: 700, ts: 10 }  // sah 690
+        ],
+        calon: [
+            { nama: 'CALON A', suara: [450, 300, 140] }, // 890
+            { nama: 'CALON B', suara: [350, 250, 290] }, // 890
+            { nama: 'CALON C', suara: [90,  140, 260] }, // 490
+            { nama: '0', suara: [0,0,0] },
+            { nama: '0', suara: [0,0,0] }
+        ]
+    },
+
+    drawB: {
+        // A=890, B=890. A menang TPS1, B menang TPS2, C menang TPS3 -> (a) seri.
+        // DPT tertinggi TPS1 (1200) -> A unggul di TPS DPT tertinggi -> (b)
+        tps: [
+            { dpt: 1200, hadir: 900, ts: 10 }, // sah 890
+            { dpt: 1000, hadir: 700, ts: 10 }, // sah 690
+            { dpt: 1000, hadir: 700, ts: 10 }  // sah 690
+        ],
+        calon: [
+            { nama: 'CALON A', suara: [500, 200, 190] }, // 890
+            { nama: 'CALON B', suara: [300, 400, 190] }, // 890
+            { nama: 'CALON C', suara: [90,  90,  310] }, // 490
+            { nama: '0', suara: [0,0,0] },
+            { nama: '0', suara: [0,0,0] }
+        ]
+    },
+
+    drawC: {
+        // A=890, B=890. A menang TPS1, B menang TPS2, C menang TPS3 -> (a) seri.
+        // DPT semua 1000 -> (b) seri per TPS. Hadir tertinggi TPS1 -> A unggul pada TPS tersebut -> (c)
+        tps: [
+            { dpt: 1000, hadir: 900, ts: 10 }, // sah 890, part 90%
+            { dpt: 1000, hadir: 800, ts: 10 }, // sah 790, part 80%
+            { dpt: 1000, hadir: 700, ts: 10 }  // sah 690, part 70%
+        ],
+        calon: [
+            { nama: 'CALON A', suara: [400, 300, 190] }, // 890
+            { nama: 'CALON B', suara: [300, 400, 190] }, // 890
+            { nama: 'CALON C', suara: [190, 90,  310] }, // 590
+            { nama: '0', suara: [0,0,0] },
+            { nama: '0', suara: [0,0,0] }
+        ]
+    },
+
+    drawMutlak: {
+        // Total A=850, B=850 -> draw total
+        // TPS1 (sah 790): A=400, B=200, C=190  -> A menang TPS1
+        // TPS2 (sah 790): A=200, B=400, C=190  -> B menang TPS2
+        // TPS3 (sah 790): A=250, B=250, C=290  -> A=B seri, C menang TPS3
+        // Menang TPS: A=1, B=1, C=1 -> tidak ada >1 TPS -> (a) gagal
+        // DPT semua 1000 -> A dan B masing-masing unggul di satu TPS -> (b) seri
+        // Kehadiran semua 800 -> A dan B masing-masing unggul di satu TPS -> (c) seri
+        // -> DRAW MUTLAK (tidak ada pemenang)
+        tps: [
+            { dpt: 1000, hadir: 800, ts: 10 }, // sah 790
+            { dpt: 1000, hadir: 800, ts: 10 }, // sah 790
+            { dpt: 1000, hadir: 800, ts: 10 }  // sah 790
+        ],
+        calon: [
+            { nama: 'CALON A', suara: [400, 200, 250] }, // 850
+            { nama: 'CALON B', suara: [200, 400, 250] }, // 850
+            { nama: 'CALON C', suara: [190, 190, 290] }, // 670
+            { nama: '0', suara: [0,0,0] },
+            { nama: '0', suara: [0,0,0] }
+        ]
+    }
+};
+
+/* ============ UTIL ============ */
 function tpsDenganNilaiMaks(tpsList, selector) {
     const maks = Math.max(...tpsList.map(selector));
     return tpsList.filter(t => selector(t) === maks);
@@ -155,13 +295,111 @@ function jumlahSuaraDiTps(kandidat, tpsIndexList) {
 }
 function kandidatDenganNilaiMaks(kandidatList, selector) {
     const maks = Math.max(...kandidatList.map(selector));
-    return {
-        maks: maks,
-        kandidat: kandidatList.filter(c => selector(c) === maks)
-    };
+    return { maks, kandidat: kandidatList.filter(c => selector(c) === maks) };
 }
 
+/* ============ BACA / TULIS FORM ============ */
+function bacaForm() {
+    let tps = [
+        { id: 1, dpt: parseInt(document.getElementById('dpt1').value)||0, hadir: parseInt(document.getElementById('hadir1').value)||0, ts: parseInt(document.getElementById('ts1').value)||0, sah: 0 },
+        { id: 2, dpt: parseInt(document.getElementById('dpt2').value)||0, hadir: parseInt(document.getElementById('hadir2').value)||0, ts: parseInt(document.getElementById('ts2').value)||0, sah: 0 },
+        { id: 3, dpt: parseInt(document.getElementById('dpt3').value)||0, hadir: parseInt(document.getElementById('hadir3').value)||0, ts: parseInt(document.getElementById('ts3').value)||0, sah: 0 }
+    ];
+    let calon = [];
+    for(let i=1; i<=5; i++) {
+        let nama = document.getElementById('nama'+i).value.trim();
+        let s1 = parseInt(document.getElementById('c'+i+'_tps1').value)||0;
+        let s2 = parseInt(document.getElementById('c'+i+'_tps2').value)||0;
+        let s3 = parseInt(document.getElementById('c'+i+'_tps3').value)||0;
+        calon.push({ nama, suara:[s1,s2,s3], total: s1+s2+s3 });
+        if(nama !== "0" && nama !== "") {
+            tps[0].sah += s1; tps[1].sah += s2; tps[2].sah += s3;
+        }
+    }
+    return { tps, calon };
+}
+
+function tulisForm(data) {
+    const tps = (data && data.tps) || [];
+    for (let i=0;i<3;i++){
+        const t = tps[i] || {dpt:0,hadir:0,ts:0};
+        document.getElementById('dpt'+(i+1)).value = t.dpt;
+        document.getElementById('hadir'+(i+1)).value = t.hadir;
+        document.getElementById('ts'+(i+1)).value = t.ts;
+    }
+    const calon = (data && data.calon) || [];
+    for (let i=1;i<=5;i++){
+        const c = calon[i-1] || {nama:'0', suara:[0,0,0]};
+        document.getElementById('nama'+i).value = c.nama;
+        document.getElementById('c'+i+'_tps1').value = (c.suara && c.suara[0])||0;
+        document.getElementById('c'+i+'_tps2').value = (c.suara && c.suara[1])||0;
+        document.getElementById('c'+i+'_tps3').value = (c.suara && c.suara[2])||0;
+    }
+}
+
+/* ============ SIMPAN / MUAT / RESET / CONTOH ============ */
+function simpanData(silent) {
+    try {
+        const { tps, calon } = bacaForm();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            tps: tps.map(t => ({dpt:t.dpt, hadir:t.hadir, ts:t.ts})),
+            calon: calon.map(c => ({nama:c.nama, suara:c.suara}))
+        }));
+        if (!silent) alert('Data berhasil disimpan.');
+    } catch(e) { alert('Gagal menyimpan: ' + e.message); }
+}
+
+function muatData() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { alert('Belum ada data tersimpan. Silakan simpan terlebih dahulu.'); return; }
+    try {
+        const data = JSON.parse(raw);
+        if (!data || !Array.isArray(data.tps) || !Array.isArray(data.calon)) {
+            throw new Error('Struktur data tidak valid');
+        }
+        tulisForm(data);
+        alert('Data berhasil dimuat.');
+    } catch(e) { alert('Gagal memuat: ' + e.message); }
+}
+
+function resetData() {
+    if (!confirm('Reset ke data default? Data yang belum disimpan akan hilang.')) return;
+    tulisForm(DEFAULT_DATA);
+    document.getElementById('hasil').style.display='none';
+    document.getElementById('error-box').style.display='none';
+    document.getElementById('chartWrapper').style.display='none';
+    document.getElementById('partisipasiSection').style.display='none';
+    lastResult = null;
+    simpanData(true);
+}
+
+function muatContoh() {
+    const pilihan = prompt(
+        'Pilih skenario contoh:\n' +
+        '1. Menang Mutlak\n' +
+        '2. Draw di Pasal 53 ayat (2) huruf a\n' +
+        '3. Draw di Pasal 53 ayat (2) huruf b\n' +
+        '4. Draw di Pasal 53 ayat (2) huruf c\n' +
+        '5. Draw Mutlak (tidak ada pemenang)\n\n' +
+        'Masukkan angka (1-5):',
+        '1'
+    );
+    if (pilihan === null) return;
+    const map = { '1':'menangMutlak', '2':'drawA', '3':'drawB', '4':'drawC', '5':'drawMutlak' };
+    const key = map[pilihan.trim()];
+    if (!key) { alert('Pilihan tidak valid.'); return; }
+    tulisForm(CONTOH[key]);
+    document.getElementById('hasil').style.display='none';
+    document.getElementById('error-box').style.display='none';
+    document.getElementById('chartWrapper').style.display='none';
+    document.getElementById('partisipasiSection').style.display='none';
+    lastResult = null;
+    simpanData(true);
+}
+
+/* ============ HITUNG ============ */
 function hitungPemenang() {
+    lastResult = null;
     let errorBox = document.getElementById('error-box');
     let divHasil = document.getElementById('hasil');
     let chartWrapper = document.getElementById('chartWrapper');
@@ -172,198 +410,266 @@ function hitungPemenang() {
     chartWrapper.style.display = 'none';
     partisipasiSection.style.display = 'none';
 
-    let tps = [
-        { id: 1, dpt: parseInt(document.getElementById('dpt1').value)||0, hadir: parseInt(document.getElementById('hadir1').value)||0, ts: parseInt(document.getElementById('ts1').value)||0, sah: 0 },
-        { id: 2, dpt: parseInt(document.getElementById('dpt2').value)||0, hadir: parseInt(document.getElementById('hadir2').value)||0, ts: parseInt(document.getElementById('ts2').value)||0, sah: 0 },
-        { id: 3, dpt: parseInt(document.getElementById('dpt3').value)||0, hadir: parseInt(document.getElementById('hadir3').value)||0, ts: parseInt(document.getElementById('ts3').value)||0, sah: 0 }
-    ];
+    let { tps, calon } = bacaForm();
 
-    let calon = [];
-    for(let i=1; i<=5; i++) {
-        let nama = document.getElementById('nama'+i).value.trim();
-        if(nama !== "0" && nama !== "") {
-            let tps1 = parseInt(document.getElementById('c'+i+'_tps1').value)||0;
-            let tps2 = parseInt(document.getElementById('c'+i+'_tps2').value)||0;
-            let tps3 = parseInt(document.getElementById('c'+i+'_tps3').value)||0;
-            let total = tps1 + tps2 + tps3;
-            calon.push({ nama: nama, suara: [tps1, tps2, tps3], total: total });
-            tps[0].sah += tps1;
-            tps[1].sah += tps2;
-            tps[2].sah += tps3;
-        }
-    }
-
-    let isError = false;
-    let errorMsgs = [];
+    // Validasi
+    let isError = false, errorMsgs = [];
     tps.forEach(t => {
+        if (t.dpt <= 0) {
+            isError = true;
+            errorMsgs.push(`<b>TPS ${t.id}:</b> DPT harus lebih dari 0.`);
+            return;
+        }
         let totalSuaraMasuk = t.sah + t.ts;
         if(t.hadir > t.dpt) {
             isError = true;
-            errorMsgs.push(`<b>TPS ${t.id}:</b> Jumlah Kehadiran (${t.hadir}) melebihi jumlah DPT (${t.dpt}).`);
+            errorMsgs.push(`<b>TPS ${t.id}:</b> Kehadiran (${t.hadir}) melebihi DPT (${t.dpt}).`);
         }
         if(t.hadir !== totalSuaraMasuk) {
             isError = true;
-            errorMsgs.push(`<b>TPS ${t.id}:</b> Data tidak sinkron! Angka Kehadiran (${t.hadir}) tidak sama dengan total surat suara yang diinput (Suara Sah ${t.sah} + Tidak Sah ${t.ts} = ${totalSuaraMasuk}).`);
+            errorMsgs.push(`<b>TPS ${t.id}:</b> Tidak sinkron! Kehadiran (${t.hadir}) ≠ Suara Sah ${t.sah} + Tidak Sah ${t.ts} = ${totalSuaraMasuk}.`);
         }
     });
-
     if(isError) {
-        errorBox.innerHTML = `<strong>Data Tidak Valid (Error):</strong><br>` + errorMsgs.join('<br>') + `<br><br><i>Silakan perbaiki data suara sah, kehadiran, atau suara tidak sah terlebih dahulu.</i>`;
+        errorBox.innerHTML = `<strong>Data Tidak Valid (Error):</strong><br>` + errorMsgs.join('<br>') + `<br><br><i>Silakan perbaiki data terlebih dahulu.</i>`;
         errorBox.style.display = 'block';
         return;
     }
-
-    if (calon.length === 0) {
+    const calonValid = calon.filter(c => c.nama !== "0" && c.nama !== "");
+    if (calonValid.length === 0) {
         errorBox.innerHTML = "Tidak ada calon yang dapat dihitung. Masukkan nama minimal satu calon selain angka 0.";
         errorBox.style.display = 'block';
         return;
     }
 
-    // ===== HITUNG TOTAL & DRAW =====
-    let maxTotal = Math.max(...calon.map(c => c.total));
-    let isDrawTotal = calon.filter(c => c.total === maxTotal).length > 1;
+    calonValid.forEach(c => { delete c.alasan; });
 
-    // ===== REKAPITULASI DENGAN HIGHLIGHT DRAW =====
+    let maxTotal = Math.max(...calonValid.map(c => c.total));
+    let isDrawTotal = calonValid.filter(c => c.total === maxTotal).length > 1;
+
+    const hasil = tentukanPemenang(calonValid, tps, '', maxTotal, isDrawTotal);
+
+    // GUARD: Draw Mutlak -> paksa pemenang null
+    if (hasil.drawTotal === true) {
+        hasil.pemenang = null;
+        hasil.winTpsIndices = [];
+        calonValid.forEach(c => { delete c.alasan; });
+    }
+
     let hasilHtml = "<h2>Hasil Pemilihan</h2>";
-    let urutanTotal = [...calon].sort((a, b) => b.total - a.total);
+    let urutanTotal = [...calonValid].sort((a, b) => b.total - a.total);
 
     if (isDrawTotal) {
-        hasilHtml += `<div class="legend-draw">⚠️ <b>Draw:</b> Baris berwarna kuning menandakan suara tertinggi yang imbang (${maxTotal} suara).</div>`;
+        hasilHtml += `<div class="legend-draw">⚠️ <b>Draw:</b> Baris kuning = suara tertinggi imbang (${maxTotal} suara).</div>`;
     }
+    hasilHtml += `<div class="legend-highlight">
+        <span class="box" style="background:#d4edda;border:1px solid #27ae60;"></span> Angka hijau = suara penentu kemenangan
+        <span class="box" style="background:#fff3cd;border:1px dashed #e0a800;"></span> Angka kuning putus-putus = suara penentu draw
+    </div>`;
+
+    hasilHtml += renderTabelTps(tps, hasil);
 
     hasilHtml += `<h3>Rekapitulasi Total Suara</h3>
         <table>
             <tr><th>Peringkat</th><th>Nama Calon</th><th>TPS 1</th><th>TPS 2</th><th>TPS 3</th><th>Total Suara</th></tr>
             ${urutanTotal.map((c, idx) => {
                 const isDraw = isDrawTotal && c.total === maxTotal;
+                const ci = calonValid.indexOf(c);
+                const hl = hasil.highlightMap[ci] || {};
+                const cellClass = (tpsIdx) => {
+                    if (hl[tpsIdx] === 'win') return 'score-win';
+                    if (hl[tpsIdx] === 'draw') return 'score-draw';
+                    return '';
+                };
                 return `<tr class="${isDraw ? 'draw-row' : ''}">
                     <td>${idx + 1}</td>
                     <td>${c.nama}${isDraw ? '<span class="draw-badge">DRAW</span>' : ''}</td>
-                    <td>${c.suara[0]}</td>
-                    <td>${c.suara[1]}</td>
-                    <td>${c.suara[2]}</td>
+                    <td class="${cellClass(0)}">${c.suara[0]}</td>
+                    <td class="${cellClass(1)}">${c.suara[1]}</td>
+                    <td class="${cellClass(2)}">${c.suara[2]}</td>
                     <td><b>${c.total}</b></td>
                 </tr>`;
             }).join('')}
         </table>`;
 
-    let hasilPenentuan = tentukanPemenang(calon, tps, hasilHtml, maxTotal, isDrawTotal);
-    divHasil.innerHTML = hasilPenentuan.html;
+    hasilHtml += hasil.html;
+
+    let banner = '';
+    if (hasil.drawTotal === true) {
+        banner = `<div class="winner-banner draw-total">
+            <div class="trophy">⚠️</div>
+            <div class="name">TIDAK ADA PEMENANG</div>
+            <div class="reason">DRAW MUTLAK — seluruh kriteria Pasal 52 &amp; 53 masih seri. Pemenang tidak dapat diputuskan.</div>
+        </div>`;
+    } else if (hasil.pemenang && hasil.pemenang.nama) {
+        banner = `<div class="winner-banner">
+            <div class="trophy">🏆</div>
+            <div class="name">${hasil.pemenang.nama}</div>
+            <div class="reason">${hasil.pemenang.alasan || ''}</div>
+        </div>`;
+    }
+
+    divHasil.innerHTML = banner + hasilHtml;
     divHasil.style.display = 'block';
 
-    renderChart(calon);
+    lastResult = {
+        tps: tps.map(t => ({...t})),
+        calon: calonValid.map(c => ({ nama:c.nama, suara:[...c.suara], total:c.total })),
+        pemenang: (hasil.drawTotal === true) ? null : (hasil.pemenang ? { nama: hasil.pemenang.nama, alasan: hasil.pemenang.alasan } : null),
+        maxTotal, isDrawTotal,
+        drawTotal: (hasil.drawTotal === true)
+    };
+
+    renderChart(calonValid, maxTotal, isDrawTotal);
     renderPartisipasi(tps);
 }
 
 function tentukanPemenang(calon, tps, hasilHtml, maxTotal, isDrawTotal) {
     let log = [];
     let kandidatDraw = calon.filter(c => c.total === maxTotal);
+    let highlightMap = {};
+    let winTpsIndices = [];
+    let penentuDptIdx = [];
+    let penentuPartIdx = [];
 
+    const setHl = (calonObj, tpsIdx, type) => {
+        const ci = calon.indexOf(calonObj);
+        if (ci < 0) return;
+        if (!highlightMap[ci]) highlightMap[ci] = {};
+        if (highlightMap[ci][tpsIdx] !== 'win') highlightMap[ci][tpsIdx] = type;
+    };
+
+    // Hitung berapa TPS dalam kelompok tertentu yang dimenangkan setiap calon.
+    // TPS yang hasilnya seri tidak dihitung sebagai kemenangan calon mana pun.
+    const hitungMenangPadaTps = (kandidat, indeksTps) => {
+        const jumlahMenang = kandidat.map(() => 0);
+        const pemenangPerTps = {};
+        indeksTps.forEach(idx => {
+            const { kandidat: tertinggi } = kandidatDenganNilaiMaks(kandidat, c => c.suara[idx]);
+            pemenangPerTps[idx] = tertinggi.length === 1 ? tertinggi[0] : null;
+            if (tertinggi.length === 1) {
+                const posisi = kandidat.indexOf(tertinggi[0]);
+                if (posisi >= 0) jumlahMenang[posisi]++;
+            }
+        });
+        const maksimum = Math.max(0, ...jumlahMenang);
+        const kandidatTeratas = kandidat.filter((c, i) => jumlahMenang[i] === maksimum);
+        return { jumlahMenang, maksimum, kandidatTeratas, pemenangPerTps };
+    };
+
+    // Pasal 52 ayat (1)
     if (kandidatDraw.length === 1) {
         let pemenang = kandidatDraw[0];
-        hasilHtml += `
-            <span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
-            <b>Dasar:</b> Perbup Pasal 52 ayat (1) — memperoleh suara terbanyak dari jumlah suara sah (${maxTotal} suara).`;
-        return { html: hasilHtml, pemenang: pemenang };
+        pemenang.alasan = `Pasal 52 ayat (1) — suara terbanyak (${maxTotal} suara).`;
+        tps.forEach((t, idx) => {
+            const { kandidat: winners } = kandidatDenganNilaiMaks(calon, c => c.suara[idx]);
+            if (winners.length === 1 && winners[0] === pemenang) {
+                setHl(pemenang, idx, 'win');
+                winTpsIndices.push(idx);
+            }
+        });
+        hasilHtml += `<span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
+            <b>Dasar:</b> Pasal 52 ayat (1) — memperoleh suara terbanyak (${maxTotal} suara).`;
+        return { html: hasilHtml, pemenang, log, drawTotal: false, highlightMap, winTpsIndices, penentuDptIdx, penentuPartIdx };
     }
 
+    // Pasal 52 ayat (2)
     let namaDraw = kandidatDraw.map(c => c.nama).join(' dan ');
-    hasilHtml += `
-        <h3>Penentuan Pemenang (Wilayah Suara Sah Lebih Luas)</h3>
-        <b>Perbup Pasal 52 ayat (2):</b> Terdapat lebih dari 1 calon dengan suara terbanyak (${maxTotal} suara): <b>${namaDraw}</b>.<br>
-        Dilanjutkan ke kriteria wilayah perolehan suara sah yang lebih luas (Perbup Pasal 53).<br><br>`;
+    hasilHtml += `<h3>Penentuan Pemenang (Wilayah Suara Sah Lebih Luas)</h3>
+        <b>Pasal 52 ayat (2):</b> Lebih dari 1 calon dengan suara terbanyak (${maxTotal}): <b>${namaDraw}</b>.<br>
+        Dilanjutkan ke kriteria Pasal 53.<br><br>`;
 
-    // ===== KRITERIA (a) =====
-    let hitungMenangTps = {};
-    kandidatDraw.forEach(c => { hitungMenangTps[c.nama] = 0; });
-
-    tps.forEach((t, idx) => {
-        let { kandidat: pemenangTps } = kandidatDenganNilaiMaks(kandidatDraw, c => c.suara[idx]);
-        if (pemenangTps.length === 1) {
-            hitungMenangTps[pemenangTps[0].nama] += 1;
-        }
-    });
-
-    let kandidatLebihDariSatuTps = kandidatDraw.filter(c => hitungMenangTps[c.nama] > 1);
-
+    // Pasal 53 huruf a: hitung jumlah TPS yang dimenangkan masing-masing calon.
+    const semuaIndeksTps = tps.map((t, idx) => idx);
+    const hasilA = hitungMenangPadaTps(kandidatDraw, semuaIndeksTps);
     log.push({
-        kriteria: 'Kriteria (a): Perolehan suara terbanyak di lebih dari 1 TPS',
-        detail: kandidatDraw.map(c => `${c.nama}: menang di ${hitungMenangTps[c.nama]} TPS`).join('; ')
+        kriteria: 'Kriteria (a): Jumlah TPS dengan perolehan suara sah terbanyak',
+        detail: kandidatDraw.map((c, i) => `${c.nama}: menang di ${hasilA.jumlahMenang[i]} TPS`).join('; ')
     });
-
-    if (kandidatLebihDariSatuTps.length === 1) {
-        let pemenang = kandidatLebihDariSatuTps[0];
+    if (hasilA.kandidatTeratas.length === 1 && hasilA.maksimum > 0) {
+        let pemenang = hasilA.kandidatTeratas[0];
+        const idxPemenang = kandidatDraw.indexOf(pemenang);
+        pemenang.alasan = `Pasal 53 ayat (1) huruf a — memperoleh suara terbanyak di ${hasilA.jumlahMenang[idxPemenang]} TPS.`;
+        semuaIndeksTps.forEach(idx => {
+            if (hasilA.pemenangPerTps[idx] === pemenang) {
+                setHl(pemenang, idx, 'win');
+                winTpsIndices.push(idx);
+            }
+        });
         hasilHtml += renderLog(log);
-        hasilHtml += `
-            <span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
-            <b>Dasar:</b>Perup Pasal 53 ayat (1) huruf a jo. ayat (2) — memperoleh suara terbanyak di lebih dari 1 TPS (${hitungMenangTps[pemenang.nama]} TPS).`;
-        return { html: hasilHtml, pemenang: pemenang };
+        hasilHtml += `<span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
+            <b>Dasar:</b> Pasal 53 ayat (1) huruf a — memperoleh suara terbanyak di ${hasilA.jumlahMenang[idxPemenang]} TPS.`;
+        return { html: hasilHtml, pemenang, log, drawTotal: false, highlightMap, winTpsIndices, penentuDptIdx, penentuPartIdx };
     }
+    hasilHtml += `<i>Kriteria (a) belum menghasilkan satu calon dengan jumlah kemenangan TPS terbanyak. Lanjut Kriteria (b)...</i><br><br>`;
 
-    if (kandidatLebihDariSatuTps.length === 0) {
-        hasilHtml += `<i>Tidak ada calon yang memperoleh suara terbanyak di lebih dari 1 TPS. Melanjutkan ke Kriteria (b)...</i><br><br>`;
-    } else {
-        hasilHtml += `<i>Lebih dari satu calon memperoleh suara terbanyak di lebih dari 1 TPS. Melanjutkan ke Kriteria (b)...</i><br><br>`;
-    }
-
-    // ===== KRITERIA (b) =====
-    let tpsMaxDpt = tpsDenganNilaiMaks(tps, t => t.dpt);
-    let idxTpsMaxDpt = tpsMaxDpt.map(t => t.id - 1);
-
-    let skorDpt = {};
-    kandidatDraw.forEach(c => { skorDpt[c.nama] = jumlahSuaraDiTps(c, idxTpsMaxDpt); });
-
-    let { maks: maksDpt, kandidat: kandidatK2 } = kandidatDenganNilaiMaks(kandidatDraw, c => skorDpt[c.nama]);
-
+    // Pasal 53 huruf b: ambil TPS dengan DPT tertinggi.
+    // Jika DPT tertinggi dimiliki beberapa TPS, bandingkan hasil setiap TPS
+    // secara terpisah dengan menghitung jumlah TPS yang dimenangkan; jangan menjumlahkan suaranya.
+    const tpsMaxDpt = tpsDenganNilaiMaks(tps, t => t.dpt);
+    const idxTpsMaxDpt = tpsMaxDpt.map(t => t.id - 1);
+    penentuDptIdx = [...idxTpsMaxDpt];
+    const hasilB = hitungMenangPadaTps(kandidatDraw, idxTpsMaxDpt);
+    let kandidatK2 = hasilB.kandidatTeratas;
     log.push({
-        kriteria: `Kriteria (b): Suara terbanyak di TPS dengan DPT paling banyak (${tpsMaxDpt.map(t => 'TPS ' + t.id).join(', ')}; DPT ${tpsMaxDpt[0].dpt})`,
-        detail: kandidatDraw.map(c => `${c.nama}: ${skorDpt[c.nama]} suara`).join('; ')
+        kriteria: `Kriteria (b): Perbandingan per TPS dengan DPT tertinggi (${tpsMaxDpt.map(t => 'TPS ' + t.id).join(', ')}; DPT ${tpsMaxDpt[0].dpt})`,
+        detail: kandidatDraw.map((c, i) => `${c.nama}: unggul di ${hasilB.jumlahMenang[i]} dari ${idxTpsMaxDpt.length} TPS DPT tertinggi`).join('; ')
     });
-
-    if (kandidatK2.length === 1) {
+    if (kandidatK2.length === 1 && hasilB.maksimum > 0) {
         let pemenang = kandidatK2[0];
+        const idxPemenang = kandidatDraw.indexOf(pemenang);
+        const tpsDimenangkan = idxTpsMaxDpt.filter(idx => hasilB.pemenangPerTps[idx] === pemenang);
+        pemenang.alasan = `Pasal 53 ayat (1) huruf b — unggul pada ${tpsDimenangkan.length} TPS dengan DPT tertinggi.`;
+        tpsDimenangkan.forEach(idx => setHl(pemenang, idx, 'win'));
         hasilHtml += renderLog(log);
-        hasilHtml += `
-            <span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
-            <b>Dasar:</b>Perbup Pasal 53 ayat (1) huruf b — memperoleh suara terbanyak (${maksDpt}) di TPS dengan jumlah DPT paling banyak (${tpsMaxDpt.map(t => 'TPS ' + t.id).join(', ')}; DPT ${tpsMaxDpt[0].dpt}).`;
-        return { html: hasilHtml, pemenang: pemenang };
+        hasilHtml += `<span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
+            <b>Dasar:</b> Pasal 53 ayat (1) huruf b — unggul pada ${tpsDimenangkan.length} dari ${idxTpsMaxDpt.length} TPS dengan DPT tertinggi (${tpsMaxDpt.map(t => 'TPS ' + t.id).join(', ')}).`;
+        return { html: hasilHtml, pemenang, log, drawTotal: false, highlightMap, winTpsIndices, penentuDptIdx, penentuPartIdx };
     }
+    hasilHtml += `<i>Kriteria (b) masih sama. Lanjut Kriteria (c)...</i><br><br>`;
 
-    hasilHtml += `<i>Kriteria (b) masih sama. Melanjutkan ke Kriteria (c)...</i><br><br>`;
-
-    // ===== KRITERIA (c) =====
-    let tpsMaxPartisipasi = tpsDenganNilaiMaks(
-        tps,
-        t => t.dpt > 0 ? (t.sah + t.ts) / t.dpt : 0
-    );
-    let idxTpsMaxPartisipasi = tpsMaxPartisipasi.map(t => t.id - 1);
-
-    let skorPartisipasi = {};
-    kandidatK2.forEach(c => { skorPartisipasi[c.nama] = jumlahSuaraDiTps(c, idxTpsMaxPartisipasi); });
-
-    let { maks: maksPartisipasi, kandidat: kandidatK3 } = kandidatDenganNilaiMaks(kandidatK2, c => skorPartisipasi[c.nama]);
-
+    // Pasal 53 huruf c: TPS dengan JUMLAH pemilih hadir paling banyak (angka absolut), bukan persentase.
+    // Jika beberapa TPS memiliki jumlah hadir tertinggi yang sama, suara calon pada TPS-TPS tersebut dijumlahkan.
+    const tpsMaxPartisipasi = tpsDenganNilaiMaks(tps, t => t.hadir);
+    const idxTpsMaxPartisipasi = tpsMaxPartisipasi.map(t => t.id - 1);
+    penentuPartIdx = [...idxTpsMaxPartisipasi];
+    const skorPartisipasi = kandidatK2.map(c => jumlahSuaraDiTps(c, idxTpsMaxPartisipasi));
+    const maksPartisipasi = Math.max(...skorPartisipasi);
+    const idxK3 = kandidatK2.map((c, i) => skorPartisipasi[i] === maksPartisipasi ? i : -1).filter(i => i >= 0);
+    const kandidatK3 = idxK3.map(i => kandidatK2[i]);
     log.push({
-        kriteria: `Kriteria (c): Suara terbanyak di TPS dengan partisipasi pemilih paling banyak (${tpsMaxPartisipasi.map(t => 'TPS ' + t.id).join(', ')}; partisipasi ${(tpsMaxPartisipasi[0].dpt > 0 ? ((tpsMaxPartisipasi[0].sah + tpsMaxPartisipasi[0].ts) / tpsMaxPartisipasi[0].dpt * 100) : 0).toFixed(2)}%)`,
-        detail: kandidatK2.map(c => `${c.nama}: ${skorPartisipasi[c.nama]} suara`).join('; ')
+        kriteria: `Kriteria (c): Suara terbanyak pada TPS dengan jumlah pemilih hadir tertinggi (${tpsMaxPartisipasi.map(t => 'TPS ' + t.id).join(', ')}; hadir ${tpsMaxPartisipasi[0].hadir} orang)`,
+        detail: kandidatK2.map((c, i) => `${c.nama}: ${skorPartisipasi[i]} suara`).join('; ')
     });
-
     if (kandidatK3.length === 1) {
         let pemenang = kandidatK3[0];
+        pemenang.alasan = `Pasal 53 ayat (1) huruf c — suara terbanyak (${maksPartisipasi}) pada TPS dengan jumlah pemilih hadir tertinggi.`;
+        idxTpsMaxPartisipasi.forEach(idx => setHl(pemenang, idx, 'win'));
         hasilHtml += renderLog(log);
-        hasilHtml += `
-            <span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
-            <b>Dasar:</b>Perbup Pasal 53 ayat (1) huruf c — memperoleh suara terbanyak (${maksPartisipasi}) di TPS dengan partisipasi pemilih paling banyak (${tpsMaxPartisipasi.map(t => 'TPS ' + t.id).join(', ')}).`;
-        return { html: hasilHtml, pemenang: pemenang };
+        hasilHtml += `<span class="winner-highlight">Pemenang: ${pemenang.nama}</span><br><br>
+            <b>Dasar:</b> Pasal 53 ayat (1) huruf c — suara terbanyak (${maksPartisipasi}) pada TPS dengan jumlah pemilih hadir tertinggi (${tpsMaxPartisipasi.map(t => 'TPS ' + t.id).join(', ')}; ${tpsMaxPartisipasi[0].hadir} pemilih hadir).`;
+        return { html: hasilHtml, pemenang, log, drawTotal: false, highlightMap, winTpsIndices, penentuDptIdx, penentuPartIdx };
     }
 
+    // Seluruh kriteria dalam pasal yang diberikan masih seri.
+    kandidatK3.forEach(c => {
+        penentuDptIdx.forEach(idx => setHl(c, idx, 'draw'));
+        penentuPartIdx.forEach(idx => setHl(c, idx, 'draw'));
+    });
     hasilHtml += renderLog(log);
-    hasilHtml += `
-        <span class="winner-highlight" style="color:#e74c3c;">Draw Total (Belum Dapat Ditentukan)</span><br><br>
-        <b>Keterangan:</b> Setelah melalui Perbup Pasal 52 dan seluruh kriteria Perbup Pasal 53 (huruf a, b, dan c), masih terdapat kesamaan. Peraturan yang diberikan belum mengatur kriteria lanjutan.`;
-    return { html: hasilHtml, pemenang: null };
+    hasilHtml += `<span class="winner-highlight" style="color:#e74c3c;">DRAW — BELUM ADA PEMENANG</span><br><br>
+        <b>Keterangan:</b> Setelah Pasal 52 dan seluruh kriteria Pasal 53 huruf a, b, dan c diterapkan, hasil masih sama. Ketentuan yang diberikan belum mengatur kriteria lanjutan, sehingga pemenang <b>belum dapat ditentukan</b>.`;
+    return {
+        html: hasilHtml,
+        pemenang: null,
+        log,
+        drawTotal: true,
+        highlightMap,
+        winTpsIndices: [],
+        penentuDptIdx,
+        penentuPartIdx
+    };
 }
-
 function renderLog(log) {
     if (!log.length) return '';
     return `<div class="log-box"><b>Jejak Keputusan:</b><ul>` +
@@ -371,34 +677,122 @@ function renderLog(log) {
         `</ul></div>`;
 }
 
-function renderChart(calon) {
+/* ============ TABEL RINGKASAN TPS ============ */
+function renderTabelTps(tps, hasil) {
+    const idxDptMaks = [];
+    const idxPartMaks = [];
+    const maksDpt = Math.max(...tps.map(t => t.dpt));
+    const maksHadir = Math.max(...tps.map(t => t.hadir));
+    tps.forEach((t, i) => {
+        if (t.dpt === maksDpt) idxDptMaks.push(i);
+        if (t.hadir === maksHadir) idxPartMaks.push(i);
+    });
+
+    const alasan = (hasil.pemenang && hasil.pemenang.alasan) ? hasil.pemenang.alasan : '';
+    const pakaiDpt = /huruf b/i.test(alasan);
+    const pakaiPart = /huruf c/i.test(alasan);
+    const drawTotal = hasil.drawTotal === true;
+    const winTps = hasil.winTpsIndices || [];
+    const penentuDptIdx = hasil.penentuDptIdx || [];
+    const penentuPartIdx = hasil.penentuPartIdx || [];
+
+    let infoPenentu = '';
+    if (drawTotal) {
+        if (idxDptMaks.length > 1 && idxPartMaks.length > 1) {
+            infoPenentu = `Semua TPS memiliki DPT dan jumlah pemilih hadir yang sama sehingga tidak ada TPS penentu yang unik.`;
+        } else if (idxDptMaks.length > 1) {
+            infoPenentu = `Terdapat ${idxDptMaks.length} TPS dengan DPT tertinggi yang sama (tidak unik).`;
+        } else if (idxPartMaks.length > 1) {
+            infoPenentu = `Terdapat ${idxPartMaks.length} TPS dengan jumlah pemilih hadir tertinggi yang sama (tidak unik).`;
+        }
+    }
+
+    const kelasDpt = (i) => {
+        if (pakaiDpt && penentuDptIdx.includes(i)) return 'tps-penentu-win';
+        if (drawTotal && penentuDptIdx.includes(i)) return 'tps-penentu-draw';
+        if (!drawTotal && !pakaiDpt && !pakaiPart && winTps.includes(i)) return 'tps-penentu-win';
+        return '';
+    };
+    const kelasPart = (i) => {
+        if (pakaiPart && penentuPartIdx.includes(i)) return 'tps-penentu-win';
+        if (drawTotal && penentuPartIdx.includes(i)) return 'tps-penentu-draw';
+        if (!drawTotal && !pakaiDpt && !pakaiPart && winTps.includes(i)) return 'tps-penentu-win';
+        return '';
+    };
+
+    const totalDpt = tps.reduce((s,t)=>s+t.dpt,0);
+    const totalHadir = tps.reduce((s,t)=>s+t.hadir,0);
+    const totalSah = tps.reduce((s,t)=>s+t.sah,0);
+    const totalTs = tps.reduce((s,t)=>s+t.ts,0);
+    const totalPemilih = totalSah + totalTs;
+    const totalPct = totalDpt > 0 ? (totalPemilih/totalDpt)*100 : 0;
+
+    return `<h3>Ringkasan Data TPS (DPT &amp; Partisipasi)</h3>
+        <p class="note">Kriteria (b): TPS dengan DPT tertinggi. Kriteria (c): TPS dengan jumlah pemilih hadir tertinggi (angka absolut).</p>
+        ${infoPenentu ? `<div class="info-penentu">ℹ️ ${infoPenentu}</div>` : ''}
+        <table class="tps-summary">
+            <tr>
+                <th>Lokasi</th><th>DPT</th><th>Kehadiran</th><th>Suara Sah</th>
+                <th>Suara Tidak Sah</th><th>Partisipasi (%)</th>
+            </tr>
+            ${tps.map((t, i) => {
+                const total = t.sah + t.ts;
+                const pct = t.dpt > 0 ? (total / t.dpt) * 100 : 0;
+                return `<tr>
+                    <td>TPS ${t.id}</td>
+                    <td class="${kelasDpt(i)}">${t.dpt}</td>
+                    <td class="${kelasPart(i)}">${t.hadir}</td>
+                    <td>${t.sah}</td>
+                    <td>${t.ts}</td>
+                    <td>${pct.toFixed(2)}%</td>
+                </tr>`;
+            }).join('')}
+            <tr>
+                <td><b>Total</b></td>
+                <td><b>${totalDpt}</b></td>
+                <td><b>${totalHadir}</b></td>
+                <td><b>${totalSah}</b></td>
+                <td><b>${totalTs}</b></td>
+                <td><b>${totalPct.toFixed(2)}%</b></td>
+            </tr>
+        </table>`;
+}
+
+/* ============ GRAFIK ============ */
+function renderChart(calon, maxTotal, isDrawTotal) {
     let chartWrapper = document.getElementById('chartWrapper');
     let ctx = document.getElementById('grafikHasil').getContext('2d');
     chartWrapper.style.display = 'block';
-
     if (chartInstance) chartInstance.destroy();
 
-    let labels = calon.map(c => c.nama);
-    let dataTps1 = calon.map(c => c.suara[0]);
-    let dataTps2 = calon.map(c => c.suara[1]);
-    let dataTps3 = calon.map(c => c.suara[2]);
+    const warnaDraw = '#f1c40f';
+    const warnaNormal = ['#3498db', '#e67e22', '#9b59b6', '#1abc9c', '#e74c3c'];
+
+    const labels = calon.map(c => c.nama);
+    const datasets = [0,1,2].map(tpsIdx => {
+        const data = calon.map(c => c.suara[tpsIdx]);
+        const bg = calon.map((c, i) => {
+            if (isDrawTotal && c.total === maxTotal) return warnaDraw;
+            return warnaNormal[i % warnaNormal.length];
+        });
+        return { label: `Suara TPS ${tpsIdx+1}`, data, backgroundColor: bg };
+    });
 
     chartInstance = new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Suara TPS 1', data: dataTps1, backgroundColor: '#3498db' },
-                { label: 'Suara TPS 2', data: dataTps2, backgroundColor: '#e67e22' },
-                { label: 'Suara TPS 3', data: dataTps3, backgroundColor: '#9b59b6' }
-            ]
-        },
+        data: { labels, datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: { y: { beginAtZero: true } },
             plugins: {
-                title: { display: true, text: 'Perolehan Suara Calon per TPS', font: { size: 16 } }
+                title: { display: true, text: 'Perolehan Suara Calon per TPS', font: { size: 16 } },
+                tooltip: { callbacks: { label: ctx => {
+                    const c = calon[ctx.dataIndex];
+                    const tag = (isDrawTotal && c.total === maxTotal) ? ' [DRAW]' : '';
+                    return `${ctx.dataset.label}: ${ctx.parsed.y}${tag}`;
+                }}},
+                legend: { position: 'bottom' }
             }
         }
     });
@@ -411,54 +805,137 @@ function renderPartisipasi(tps) {
     section.style.display = 'block';
 
     const labels = tps.map(t => `TPS ${t.id}`);
+    const jumlahHadir = tps.map(t => t.hadir);                 // JUMLAH yang dipakai kriteria Pasal 53 huruf c
     const percentages = tps.map(t => t.dpt > 0 ? ((t.sah + t.ts) / t.dpt) * 100 : 0);
-    const totalDpt = tps.reduce((sum, t) => sum + t.dpt, 0);
-    const totalSah = tps.reduce((sum, t) => sum + t.sah, 0);
-    const totalTidakSah = tps.reduce((sum, t) => sum + t.ts, 0);
+    const totalDpt = tps.reduce((s, t) => s + t.dpt, 0);
+    const totalSah = tps.reduce((s, t) => s + t.sah, 0);
+    const totalTidakSah = tps.reduce((s, t) => s + t.ts, 0);
     const totalPemilih = totalSah + totalTidakSah;
+    const totalHadir = tps.reduce((s, t) => s + t.hadir, 0);
     const persenTotal = totalDpt > 0 ? (totalPemilih / totalDpt) * 100 : 0;
 
     tabel.innerHTML = `
-        <h3>Rincian Persentase Partisipasi Pemilih</h3>
-        <p class="note">Rumus: (Suara Sah + Suara Tidak Sah) ÷ DPT × 100%</p>
+        <h3>Rincian Partisipasi Pemilih</h3>
+        <p class="note"><b>Kriteria Pasal 53 huruf c memakai JUMLAH pemilih hadir</b> (angka absolut), bukan prosentase. Prosentase hanya informasi tambahan.</p>
         <table>
-            <tr><th>Lokasi</th><th>DPT</th><th>Suara Sah</th><th>Suara Tidak Sah</th><th>Total Pemilih</th><th>Partisipasi</th></tr>
+            <tr><th>Lokasi</th><th>DPT</th><th>Kehadiran (Jumlah)</th><th>Suara Sah</th><th>Suara Tidak Sah</th><th>Prosentase</th></tr>
             ${tps.map((t, i) => {
                 const total = t.sah + t.ts;
-                return `<tr><td>TPS ${t.id}</td><td>${t.dpt}</td><td>${t.sah}</td><td>${t.ts}</td><td>${total}</td><td><b>${percentages[i].toFixed(2)}%</b></td></tr>`;
+                return `<tr>
+                    <td>TPS ${t.id}</td>
+                    <td>${t.dpt}</td>
+                    <td><b>${t.hadir}</b></td>
+                    <td>${t.sah}</td>
+                    <td>${t.ts}</td>
+                    <td>${percentages[i].toFixed(2)}%</td>
+                </tr>`;
             }).join('')}
-            <tr><td><b>Total</b></td><td><b>${totalDpt}</b></td><td><b>${totalSah}</b></td><td><b>${totalTidakSah}</b></td><td><b>${totalPemilih}</b></td><td><b>${persenTotal.toFixed(2)}%</b></td></tr>
+            <tr>
+                <td><b>Total</b></td>
+                <td><b>${totalDpt}</b></td>
+                <td><b>${totalHadir}</b></td>
+                <td><b>${totalSah}</b></td>
+                <td><b>${totalTidakSah}</b></td>
+                <td><b>${persenTotal.toFixed(2)}%</b></td>
+            </tr>
         </table>`;
 
     if (chartPartisipasiInstance) chartPartisipasiInstance.destroy();
     chartPartisipasiInstance = new Chart(ctx, {
         type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                label: 'Partisipasi Pemilih (%)',
-                data: percentages,
-                backgroundColor: '#27ae60'
-            }]
+        data: { 
+            labels, 
+            datasets: [
+                { label: 'Jumlah Kehadiran (kriteria Pasal 53 c)', data: jumlahHadir, backgroundColor: '#27ae60' },
+                { label: 'Prosentase (%)', data: percentages, backgroundColor: '#3498db', yAxisID: 'y1' }
+            ] 
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: { display: true, text: 'Partisipasi (%)' },
-                    ticks: { callback: value => value + '%' }
-                }
+            responsive: true, maintainAspectRatio: false,
+            scales: { 
+                y: { beginAtZero: true, title: { display: true, text: 'Jumlah Kehadiran' } },
+                y1: { beginAtZero: true, max: 100, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Prosentase (%)' }, ticks: { callback: v => v + '%' } }
             },
             plugins: {
-                title: { display: true, text: 'Persentase Partisipasi Pemilih per TPS', font: { size: 16 } },
-                tooltip: { callbacks: { label: context => context.parsed.y.toFixed(2) + '%' } }
+                title: { display: true, text: 'Partisipasi Pemilih per TPS (Jumlah = kriteria Pasal 53 huruf c)', font: { size: 16 } },
+                tooltip: { callbacks: { label: ctx => ctx.dataset.label.includes('%') ? ctx.parsed.y.toFixed(2) + '%' : ctx.parsed.y + ' orang' } }
             }
         }
     });
 }
+
+/* ============ EKSPOR CSV ============ */
+function eksporCSV() {
+    if (!lastResult) { alert('Hitung pemenang terlebih dahulu sebelum ekspor.'); return; }
+    const { tps, calon, pemenang, drawTotal } = lastResult;
+
+    let rows = [];
+    rows.push(['SIMULASI PILKADES']);
+    rows.push([]);
+    rows.push(['RINGKASAN TPS']);
+    rows.push(['Lokasi', 'DPT', 'Kehadiran (Jumlah)', 'Suara Sah', 'Suara Tidak Sah', 'Partisipasi (%)']);
+    tps.forEach(t => {
+        const total = t.sah + t.ts;
+        const pct = t.dpt > 0 ? ((total / t.dpt) * 100).toFixed(2) : '0.00';
+        rows.push([`TPS ${t.id}`, t.dpt, t.hadir, t.sah, t.ts, pct]);
+    });
+    rows.push([]);
+    rows.push(['REKAP SUARA CALON']);
+    rows.push(['Nama', 'TPS 1', 'TPS 2', 'TPS 3', 'Total']);
+    calon.forEach(c => rows.push([c.nama, c.suara[0], c.suara[1], c.suara[2], c.total]));
+    rows.push([]);
+    rows.push(['HASIL']);
+    if (drawTotal === true) {
+        rows.push(['Pemenang', 'TIDAK ADA PEMENANG (DRAW MUTLAK)']);
+        rows.push(['Alasan', 'Seluruh kriteria Pasal 52 & 53 masih seri']);
+    } else if (pemenang && pemenang.nama) {
+        rows.push(['Pemenang', pemenang.nama]);
+        rows.push(['Alasan', pemenang.alasan || '']);
+    }
+    rows.push([]);
+    rows.push(['PARTISIPASI (Jumlah Kehadiran = kriteria Pasal 53 huruf c)']);
+    rows.push(['Lokasi', 'DPT', 'Kehadiran (Jumlah)', 'Suara Sah', 'Suara Tidak Sah', 'Partisipasi (%)']);
+    tps.forEach(t => {
+        const total = t.sah + t.ts;
+        const pct = t.dpt > 0 ? ((total / t.dpt) * 100).toFixed(2) : '0.00';
+        rows.push([`TPS ${t.id}`, t.dpt, t.hadir, t.sah, t.ts, pct]);
+    });
+    const totalDpt = tps.reduce((s,t)=>s+t.dpt,0);
+    const totalHadir = tps.reduce((s,t)=>s+t.hadir,0);
+    const totalSah = tps.reduce((s,t)=>s+t.sah,0);
+    const totalTs = tps.reduce((s,t)=>s+t.ts,0);
+    const totalPct = totalDpt>0 ? (((totalSah+totalTs)/totalDpt)*100).toFixed(2) : '0.00';
+    rows.push(['Total', totalDpt, totalHadir, totalSah, totalTs, totalPct]);
+
+    const csv = rows.map(r => r.map(v => {
+        const s = String(v ?? '');
+        return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    }).join(',')).join('\n');
+
+    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hasil_pilkades_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+/* ============ AUTO-SAVE & LOAD ============ */
+document.addEventListener('input', () => {
+    clearTimeout(window.__autosaveTimer);
+    window.__autosaveTimer = setTimeout(() => simpanData(true), 800);
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        try {
+            const data = JSON.parse(raw);
+            if (data && Array.isArray(data.tps) && Array.isArray(data.calon)) tulisForm(data);
+        } catch(e) { /* fallback ke default di form */ }
+    }
+});
 </script>
 
 </body>
